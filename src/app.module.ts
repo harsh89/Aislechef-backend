@@ -1,4 +1,5 @@
-import { Module } from '@nestjs/common';
+import { Module, MiddlewareConsumer, NestModule } from '@nestjs/common';
+import { LoggerMiddleware } from './logger.middleware';
 import { ConfigModule } from '@nestjs/config';
 import { APP_GUARD } from '@nestjs/core';
 import { SupabaseAuthGuard } from './auth/guards/supabase-auth.guard';
@@ -26,4 +27,8 @@ import { SyncModule } from './sync/sync.module';
     },
   ],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(LoggerMiddleware).forRoutes('*');
+  }
+}

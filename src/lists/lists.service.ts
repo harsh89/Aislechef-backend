@@ -49,16 +49,31 @@ export class ListsService {
     const from = (page - 1) * limit;
     const to = from + limit - 1;
 
-    const { data: items, error: itemsError } = await this.supabase.client
+    const {
+      data: items,
+      error: itemsError,
+      count,
+    } = await this.supabase.client
       .from('items')
-      .select('*')
+      .select('*', { count: 'exact' })
       .eq('listId', listId)
       .eq('isDeleted', false)
-      .order('createdAt', { ascending: false })
+      .order('createdDate', { ascending: false })
       .range(from, to);
 
     if (itemsError) throw new Error(itemsError.message);
-    return { ...list, items: items ?? [] };
+
+    const total = count ?? 0;
+    return {
+      ...(list as Record<string, unknown>),
+      items: items ?? [],
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
   }
 
   async update(userId: string, listId: string, dto: UpdateListDto) {
