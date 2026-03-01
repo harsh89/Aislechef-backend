@@ -8,6 +8,11 @@ export enum CuisineEnum {
   OTHER = 'Other',
 }
 
+export enum RecipeModeEnum {
+  EXACT = 'exact',
+  DETAILED = 'detailed',
+}
+
 export class ReccoRequestDto {
   @IsArray()
   @IsString({ each: true })
@@ -15,4 +20,7 @@ export class ReccoRequestDto {
 
   @IsEnum(CuisineEnum)
   cuisineFilter: CuisineEnum;
+
+  @IsEnum(RecipeModeEnum)
+  recipeMode: RecipeModeEnum;
 }

@@ -1,7 +1,7 @@
 import { HttpException, InternalServerErrorException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { SupabaseService } from '../supabase/supabase.service';
-import { CuisineEnum } from './dto/recco-request.dto';
+import { CuisineEnum, RecipeModeEnum } from './dto/recco-request.dto';
 import { ReccoService } from './recco.service';
 
 function chain(result: { data: unknown; error: unknown }) {
@@ -25,6 +25,7 @@ const mockOpenAI = { chat: { completions: { create: mockChatCreate } } };
 const DTO = {
   selectedItems: ['tomato', 'onion'],
   cuisineFilter: CuisineEnum.INDIAN,
+  recipeMode: RecipeModeEnum.EXACT,
 };
 const FAKE_RECIPES = [{ name: 'Dal Tadka', ingredients: [], instructions: [] }];
 
@@ -43,6 +44,7 @@ describe('ReccoService', () => {
         ReccoService,
         { provide: SupabaseService, useValue: mockSupabaseService },
         { provide: 'OPENAI_CLIENT', useValue: mockOpenAI },
+        { provide: 'ANTHROPIC_CLIENT', useValue: {} },
       ],
     }).compile();
     service = module.get<ReccoService>(ReccoService);
@@ -143,10 +145,12 @@ describe('ReccoService', () => {
       const dto1 = {
         selectedItems: ['onion', 'tomato'],
         cuisineFilter: CuisineEnum.INDIAN,
+        recipeMode: RecipeModeEnum.EXACT,
       };
       const dto2 = {
         selectedItems: ['tomato', 'onion'],
         cuisineFilter: CuisineEnum.INDIAN,
+        recipeMode: RecipeModeEnum.EXACT,
       };
 
       // Both should produce same fingerprint — test via cache behaviour
