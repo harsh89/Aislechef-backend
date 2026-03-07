@@ -6,10 +6,11 @@ import { ItemsService } from './items.service';
 
 function chain(result: { data: unknown; error: unknown }) {
   const c: Record<string, jest.Mock> = {};
-  for (const m of ['select', 'insert', 'update', 'eq']) {
+  for (const m of ['select', 'insert', 'update', 'eq', 'ilike']) {
     c[m] = jest.fn().mockReturnThis();
   }
   c['single'] = jest.fn().mockResolvedValue(result);
+  c['maybeSingle'] = jest.fn().mockResolvedValue(result);
   (
     c as unknown as { then: (r: (v: unknown) => unknown) => Promise<unknown> }
   ).then = (resolve) => Promise.resolve(result).then(resolve);
@@ -34,10 +35,14 @@ describe('ItemsService', () => {
   });
 
   describe('create', () => {
-    it('creates an item after verifying list ownership', async () => {
+    it('creates an item when no duplicate name exists', async () => {
       const listChain = chain({ data: { listId: 'l1' }, error: null });
+      const lookupChain = chain({ data: null, error: null });
       const insertChain = chain({ data: { itemId: 'i1' }, error: null });
-      mockFrom.mockReturnValueOnce(listChain).mockReturnValueOnce(insertChain);
+      mockFrom
+        .mockReturnValueOnce(listChain)
+        .mockReturnValueOnce(lookupChain)
+        .mockReturnValueOnce(insertChain);
 
       const dto = { itemName: 'Milk', quantity: 2, unit: UnitEnum.L };
       const result = await service.create('u1', 'l1', dto);
@@ -51,6 +56,55 @@ describe('ItemsService', () => {
         }),
       );
       expect(result).toEqual({ itemId: 'i1' });
+    });
+
+    it('updates quantity when item with same name already exists', async () => {
+      const listChain = chain({ data: { listId: 'l1' }, error: null });
+      const lookupChain = chain({
+        data: { itemId: 'i1', quantity: 3, unit: UnitEnum.L },
+        error: null,
+      });
+      const updateChain = chain({
+        data: { itemId: 'i1', itemName: 'Milk', quantity: 5, unit: 'L' },
+        error: null,
+      });
+      mockFrom
+        .mockReturnValueOnce(listChain)
+        .mockReturnValueOnce(lookupChain)
+        .mockReturnValueOnce(updateChain);
+
+      const dto = { itemName: 'Milk', quantity: 2, unit: UnitEnum.L };
+      const result = await service.create('u1', 'l1', dto);
+
+      expect(updateChain['update']).toHaveBeenCalledWith(
+        expect.objectContaining({ quantity: 5 }),
+      );
+      expect(result).toEqual({ itemId: 'i1', itemName: 'Milk', quantity: 5, unit: 'L' });
+    });
+
+    it('matches duplicate name case-insensitively', async () => {
+      const listChain = chain({ data: { listId: 'l1' }, error: null });
+      const lookupChain = chain({
+        data: { itemId: 'i1', quantity: 1, unit: UnitEnum.PCS },
+        error: null,
+      });
+      const updateChain = chain({
+        data: { itemId: 'i1', quantity: 3, unit: 'pcs' },
+        error: null,
+      });
+      mockFrom
+        .mockReturnValueOnce(listChain)
+        .mockReturnValueOnce(lookupChain)
+        .mockReturnValueOnce(updateChain);
+
+      // 'milk' should match existing 'Milk' via ilike
+      const dto = { itemName: 'milk', quantity: 2, unit: UnitEnum.PCS };
+      await service.create('u1', 'l1', dto);
+
+      expect(lookupChain['ilike']).toHaveBeenCalledWith('itemName', 'milk');
+      expect(updateChain['update']).toHaveBeenCalledWith(
+        expect.objectContaining({ quantity: 3 }),
+      );
     });
 
     it('throws NotFoundException when list does not exist', async () => {

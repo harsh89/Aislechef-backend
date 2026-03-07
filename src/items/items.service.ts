@@ -25,11 +25,36 @@ export class ItemsService {
   async create(userId: string, listId: string, dto: CreateItemDto) {
     await this.verifyListOwnership(userId, listId);
 
+    const trimmedName = dto.itemName.trim();
+
+    const { data: existing } = await this.supabase.client
+      .from('items')
+      .select('itemId, quantity, unit')
+      .eq('listId', listId)
+      .ilike('itemName', trimmedName)
+      .eq('isDeleted', false)
+      .maybeSingle();
+
+    if (existing) {
+      const { data, error } = await this.supabase.client
+        .from('items')
+        .update({
+          quantity: existing.quantity + dto.quantity,
+          lastUpdated: new Date().toISOString(),
+        })
+        .eq('itemId', existing.itemId)
+        .select()
+        .single();
+
+      if (error ?? !data) throw new NotFoundException('Item not found');
+      return data;
+    }
+
     const { data, error } = await this.supabase.client
       .from('items')
       .insert({
         listId,
-        itemName: dto.itemName,
+        itemName: trimmedName,
         quantity: dto.quantity,
         unit: dto.unit,
         lastUpdated: new Date().toISOString(),

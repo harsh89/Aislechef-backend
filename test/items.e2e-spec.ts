@@ -37,14 +37,16 @@ describe('Items (e2e)', () => {
 
   const validItem = { itemName: 'Milk', quantity: 2, unit: 'L' };
 
-  it('POST /lists/:listId/items → 201 with valid body', async () => {
+  it('POST /lists/:listId/items → 201 with valid body (new item)', async () => {
     const listChain = mockChain({ data: { listId: 'l1' }, error: null });
+    const lookupChain = mockChain({ data: null, error: null });
     const insertChain = mockChain({
       data: { itemId: 'i1', ...validItem },
       error: null,
     });
     supabase.client.from
       .mockReturnValueOnce(listChain)
+      .mockReturnValueOnce(lookupChain)
       .mockReturnValueOnce(insertChain);
 
     return request(app.getHttpServer())
@@ -54,6 +56,31 @@ describe('Items (e2e)', () => {
       .expect(201)
       .expect((res) => {
         expect(res.body.itemName).toBe('Milk');
+      });
+  });
+
+  it('POST /lists/:listId/items → 201 with updated quantity when duplicate name exists', async () => {
+    const listChain = mockChain({ data: { listId: 'l1' }, error: null });
+    const lookupChain = mockChain({
+      data: { itemId: 'i1', quantity: 3, unit: 'L' },
+      error: null,
+    });
+    const updateChain = mockChain({
+      data: { itemId: 'i1', itemName: 'Milk', quantity: 5, unit: 'L' },
+      error: null,
+    });
+    supabase.client.from
+      .mockReturnValueOnce(listChain)
+      .mockReturnValueOnce(lookupChain)
+      .mockReturnValueOnce(updateChain);
+
+    return request(app.getHttpServer())
+      .post('/lists/l1/items')
+      .set(auth)
+      .send({ itemName: 'milk', quantity: 2, unit: 'L' })
+      .expect(201)
+      .expect((res) => {
+        expect(res.body.quantity).toBe(5);
       });
   });
 

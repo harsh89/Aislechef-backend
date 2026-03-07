@@ -19,6 +19,7 @@ export function mockChain(result: { data: unknown; error: unknown }) {
     c[m] = jest.fn().mockReturnThis();
   }
   c['single'] = jest.fn().mockResolvedValue(result);
+  c['maybeSingle'] = jest.fn().mockResolvedValue(result);
   (
     c as unknown as { then: (r: (v: unknown) => unknown) => Promise<unknown> }
   ).then = (resolve) => Promise.resolve(result).then(resolve);
