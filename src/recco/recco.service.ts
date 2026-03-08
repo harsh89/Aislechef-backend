@@ -135,7 +135,7 @@ Return a JSON object with this exact structure:
       "servings": 2,
       "prepTime": "10 mins",
       "cookTime": "20 mins",
-      "ingredients": [{"name": "ingredient", "quantity": 1, "unit": "pcs"}],
+      "ingredients": [{"name": "ingredient", "quantity": 1, "unit": "cup"}],
       "instructions": [
         "Step 1: Detailed action with time/temperature if applicable.",
         "Step 2: ..."
@@ -144,7 +144,10 @@ Return a JSON object with this exact structure:
   ]
 }
 
-The unit must be one of: pcs, kg, g, L, mL, tbsp, tsp, cup.
+STRICT RULES — violating these will break the app:
+- The "unit" field MUST be exactly one of these 8 values: pcs, kg, g, L, mL, tbsp, tsp, cup
+- Do NOT use: ounces, oz, lbs, pounds, bunch, clove, cloves, slice, slices, pinch, dash, or any other value
+- If no unit fits, use "pcs"
 Return only valid JSON, no other text.`;
   }
 

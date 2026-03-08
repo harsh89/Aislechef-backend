@@ -27,6 +27,8 @@ export class ItemsService {
 
     const trimmedName = dto.itemName.trim();
 
+    console.log('Checking for existing item with name:', trimmedName);
+
     const { data: existing } = await this.supabase.client
       .from('items')
       .select('itemId, quantity, unit')
