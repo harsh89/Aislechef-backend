@@ -145,6 +145,28 @@ describe('ItemsService', () => {
     });
   });
 
+  describe('resetCompleted', () => {
+    it('resets isCompleted for all items in the list', async () => {
+      const listChain = chain({ data: { listId: 'l1' }, error: null });
+      const updateChain = chain({ data: {}, error: null });
+      mockFrom
+        .mockReturnValueOnce(listChain)
+        .mockReturnValueOnce(updateChain);
+
+      await expect(service.resetCompleted('u1', 'l1')).resolves.not.toThrow();
+      expect(updateChain['update']).toHaveBeenCalledWith(
+        expect.objectContaining({ isCompleted: false }),
+      );
+    });
+
+    it('throws NotFoundException when list not found', async () => {
+      mockFrom.mockReturnValue(chain({ data: null, error: null }));
+      await expect(service.resetCompleted('u1', 'missing')).rejects.toThrow(
+        NotFoundException,
+      );
+    });
+  });
+
   describe('softDelete', () => {
     it('soft-deletes an item after verifying list ownership', async () => {
       const listChain = chain({ data: { listId: 'l1' }, error: null });

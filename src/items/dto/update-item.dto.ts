@@ -1,4 +1,5 @@
 import {
+  IsBoolean,
   IsEnum,
   IsNotEmpty,
   IsNumber,
@@ -24,4 +25,8 @@ export class UpdateItemDto {
   @IsOptional()
   @IsEnum(UnitEnum)
   unit?: UnitEnum;
+
+  @IsOptional()
+  @IsBoolean()
+  isCompleted?: boolean;
 }

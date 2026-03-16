@@ -137,6 +137,17 @@ describe('Items (e2e)', () => {
       .expect(400);
   });
 
+  it('POST /lists/:listId/items/reset-completed → 200', async () => {
+    supabase.client.from
+      .mockReturnValueOnce(mockChain({ data: { listId: 'l1' }, error: null }))
+      .mockReturnValueOnce(mockChain({ data: {}, error: null }));
+
+    return request(app.getHttpServer())
+      .post('/lists/l1/items/reset-completed')
+      .set(auth)
+      .expect(201); // NestJS @Post defaults to 201
+  });
+
   it('DELETE /lists/:listId/items/:itemId → 204', async () => {
     supabase.client.from
       .mockReturnValueOnce(mockChain({ data: { listId: 'l1' }, error: null }))

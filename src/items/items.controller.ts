@@ -36,6 +36,15 @@ export class ItemsController {
     return this.itemsService.update(user.id, listId, itemId, dto);
   }
 
+  @Post('reset-completed')
+  @HttpCode(HttpStatus.OK)
+  resetCompleted(
+    @User() user: { id: string },
+    @Param('listId') listId: string,
+  ) {
+    return this.itemsService.resetCompleted(user.id, listId);
+  }
+
   @Delete(':itemId')
   @HttpCode(HttpStatus.NO_CONTENT)
   softDelete(

@@ -90,6 +90,18 @@ export class ItemsService {
     return data;
   }
 
+  async resetCompleted(userId: string, listId: string): Promise<void> {
+    await this.verifyListOwnership(userId, listId);
+
+    const { error } = await this.supabase.client
+      .from('items')
+      .update({ isCompleted: false, lastUpdated: new Date().toISOString() })
+      .eq('listId', listId)
+      .eq('isDeleted', false);
+
+    if (error) throw new Error(error.message);
+  }
+
   async softDelete(
     userId: string,
     listId: string,
