@@ -1,10 +1,17 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  InternalServerErrorException,
+  Logger,
+  NotFoundException,
+} from '@nestjs/common';
 import { SupabaseService } from '../supabase/supabase.service';
 import { CreateItemDto } from './dto/create-item.dto';
 import { UpdateItemDto } from './dto/update-item.dto';
 
 @Injectable()
 export class ItemsService {
+  private readonly logger = new Logger(ItemsService.name);
+
   constructor(private readonly supabase: SupabaseService) {}
 
   private async verifyListOwnership(
@@ -27,7 +34,7 @@ export class ItemsService {
 
     const trimmedName = dto.itemName.trim();
 
-    console.log('Checking for existing item with name:', trimmedName);
+    this.logger.debug(`Checking for existing item with name: ${trimmedName}`);
 
     const { data: existing } = await this.supabase.client
       .from('items')
@@ -48,7 +55,8 @@ export class ItemsService {
         .select()
         .single();
 
-      if (error ?? !data) throw new NotFoundException('Item not found');
+      if (error) throw new InternalServerErrorException(error.message);
+      if (!data) throw new NotFoundException('Item not found');
       return data;
     }
 
@@ -86,7 +94,8 @@ export class ItemsService {
       .select()
       .single();
 
-    if (error ?? !data) throw new NotFoundException('Item not found');
+    if (error) throw new InternalServerErrorException(error.message);
+    if (!data) throw new NotFoundException('Item not found');
     return data;
   }
 

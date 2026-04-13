@@ -46,6 +46,9 @@ export class SyncItemDto {
 
   @IsBoolean()
   isDeleted: boolean;
+
+  @IsBoolean()
+  isCompleted: boolean;
 }
 
 export class SyncDto {

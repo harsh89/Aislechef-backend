@@ -137,6 +137,37 @@ describe('Items (e2e)', () => {
       .expect(400);
   });
 
+  it('PUT /lists/:listId/items/:itemId → 200 toggling isCompleted', async () => {
+    const listChain = mockChain({ data: { listId: 'l1' }, error: null });
+    const updateChain = mockChain({ data: { itemId: 'i1', isCompleted: true }, error: null });
+    supabase.client.from
+      .mockReturnValueOnce(listChain)
+      .mockReturnValueOnce(updateChain);
+
+    return request(app.getHttpServer())
+      .put('/lists/l1/items/i1')
+      .set(auth)
+      .send({ isCompleted: true })
+      .expect(200)
+      .expect((res) => {
+        expect(res.body.isCompleted).toBe(true);
+      });
+  });
+
+  it('PUT /lists/:listId/items/:itemId → 500 on DB error', async () => {
+    const listChain = mockChain({ data: { listId: 'l1' }, error: null });
+    const updateChain = mockChain({ data: null, error: { message: 'column does not exist' } });
+    supabase.client.from
+      .mockReturnValueOnce(listChain)
+      .mockReturnValueOnce(updateChain);
+
+    return request(app.getHttpServer())
+      .put('/lists/l1/items/i1')
+      .set(auth)
+      .send({ quantity: 1 })
+      .expect(500);
+  });
+
   it('POST /lists/:listId/items/reset-completed → 200', async () => {
     supabase.client.from
       .mockReturnValueOnce(mockChain({ data: { listId: 'l1' }, error: null }))
@@ -145,7 +176,7 @@ describe('Items (e2e)', () => {
     return request(app.getHttpServer())
       .post('/lists/l1/items/reset-completed')
       .set(auth)
-      .expect(201); // NestJS @Post defaults to 201
+      .expect(200);
   });
 
   it('DELETE /lists/:listId/items/:itemId → 204', async () => {

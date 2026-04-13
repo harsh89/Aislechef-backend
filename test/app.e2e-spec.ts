@@ -26,6 +26,13 @@ describe('AppModule (e2e)', () => {
     await app.close();
   });
 
+  it('GET /health → 200 with no auth required', () => {
+    return request(app.getHttpServer())
+      .get('/health')
+      .expect(200)
+      .expect({ status: 'ok' });
+  });
+
   it('unknown routes return 404', () => {
     return request(app.getHttpServer()).get('/').expect(404);
   });

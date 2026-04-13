@@ -90,6 +90,7 @@ export class SyncService {
             quantity: item.quantity,
             unit: item.unit,
             isDeleted: item.isDeleted,
+            isCompleted: item.isCompleted,
             lastUpdated: item.lastUpdated,
           })
           .eq('itemId', item.itemId);
@@ -109,6 +110,7 @@ export class SyncService {
       quantity: item.quantity,
       unit: item.unit,
       isDeleted: item.isDeleted,
+      isCompleted: item.isCompleted,
       lastUpdated: item.lastUpdated,
     });
     return null;

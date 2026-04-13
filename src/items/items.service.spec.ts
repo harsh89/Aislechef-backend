@@ -1,4 +1,4 @@
-import { NotFoundException } from '@nestjs/common';
+import { InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { SupabaseService } from '../supabase/supabase.service';
 import { UnitEnum } from './dto/create-item.dto';
@@ -117,6 +117,20 @@ describe('ItemsService', () => {
         }),
       ).rejects.toThrow(NotFoundException);
     });
+
+    it('throws InternalServerErrorException on DB error during upsert update', async () => {
+      const listChain = chain({ data: { listId: 'l1' }, error: null });
+      const lookupChain = chain({ data: { itemId: 'i1', quantity: 1, unit: UnitEnum.L }, error: null });
+      const updateChain = chain({ data: null, error: { message: 'column does not exist' } });
+      mockFrom
+        .mockReturnValueOnce(listChain)
+        .mockReturnValueOnce(lookupChain)
+        .mockReturnValueOnce(updateChain);
+
+      await expect(
+        service.create('u1', 'l1', { itemName: 'Milk', quantity: 2, unit: UnitEnum.L }),
+      ).rejects.toThrow(InternalServerErrorException);
+    });
   });
 
   describe('update', () => {
@@ -141,6 +155,16 @@ describe('ItemsService', () => {
 
       await expect(service.update('u1', 'l1', 'missing', {})).rejects.toThrow(
         NotFoundException,
+      );
+    });
+
+    it('throws InternalServerErrorException on DB error', async () => {
+      const listChain = chain({ data: { listId: 'l1' }, error: null });
+      const updateChain = chain({ data: null, error: { message: 'column does not exist' } });
+      mockFrom.mockReturnValueOnce(listChain).mockReturnValueOnce(updateChain);
+
+      await expect(service.update('u1', 'l1', 'i1', { isCompleted: true })).rejects.toThrow(
+        InternalServerErrorException,
       );
     });
   });
