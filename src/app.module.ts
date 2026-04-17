@@ -1,4 +1,5 @@
 import { Module, MiddlewareConsumer, NestModule } from '@nestjs/common';
+import { ScheduleModule } from '@nestjs/schedule';
 import { LoggerMiddleware } from './logger.middleware';
 import { HealthController } from './health.controller';
 import { ConfigModule } from '@nestjs/config';
@@ -10,17 +11,20 @@ import { ListsModule } from './lists/lists.module';
 import { ReccoModule } from './recco/recco.module';
 import { SupabaseModule } from './supabase/supabase.module';
 import { SyncModule } from './sync/sync.module';
+import { CleanupModule } from './cleanup/cleanup.module';
 
 @Module({
   controllers: [HealthController],
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
+    ScheduleModule.forRoot(),
     SupabaseModule,
     AuthModule,
     ListsModule,
     ItemsModule,
     SyncModule,
     ReccoModule,
+    CleanupModule,
   ],
   providers: [
     {

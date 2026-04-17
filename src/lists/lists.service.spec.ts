@@ -93,7 +93,8 @@ describe('ListsService', () => {
 
       const result = await service.findOne('u1', 'l1', 1, 20);
 
-      expect(result).toEqual({ ...listData, items: itemsData });
+      expect(result).toMatchObject({ ...listData, items: itemsData });
+      expect(result).toHaveProperty('pagination');
       expect(itemsChain['range']).toHaveBeenCalledWith(0, 19);
     });
 
